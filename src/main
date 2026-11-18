@@ -1,0 +1,58 @@
+import json
+
+#Opens file and reads it while storing it in a variable to use
+file = open("logs/login_logs.txt", "r")
+logs = file.readlines()
+file.close()
+
+#dictionaries created to store attempts and other info
+failed_attempts = {}
+successful_attempts ={}
+#logic used to go through the logs and then store the attempts in their respective dictionaries from the Ip Address
+for log in logs:
+    timestamp, ip_address, status = log.strip().split(",")
+
+    if status.upper() == "FAILED":
+        if ip_address in failed_attempts:
+            failed_attempts[ip_address] += 1
+        else:
+            failed_attempts[ip_address] = 1
+
+    if status.upper() == "SUCCESS":
+        if ip_address in successful_attempts:
+            successful_attempts[ip_address] += 1
+        else:
+            successful_attempts[ip_address] = 1
+
+security_report = {}
+
+#logic assessing the risk of failed login attempts to be created for a report          
+for ip_address, attempts in failed_attempts.items():
+    successful = successful_attempts.get(ip_address, 0)
+
+    security_report[ip_address] = {
+        "failed": attempts,
+        "successful": attempts
+    }
+#low severity
+    if 1 <= attempts <= 4:
+        security_report[ip_address]["severity"] = "LOW"
+        print("Threat level LOW from: " + ip_address)
+#medium severity
+    elif  5<= attempts <=9:
+        security_report[ip_address]["severity"] = "MEDIUM"
+        print("Threat level MEDIUM from: " + ip_address)
+#high severity        
+    elif attempts >= 10:
+         security_report[ip_address]["severity"] = "HIGH"
+         print("Threat level HIGH from: " + ip_address)
+    if attempts >= 5 and successful >= 1:
+        print("WARNING: Repeated failed logins followed by successful login from: " + ip_address)
+
+report_file = open("reports/security_report.json", "w")
+json.dump(security_report, report_file)
+report_file.close()
+
+    
+
+
